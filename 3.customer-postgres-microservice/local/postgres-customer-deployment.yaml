@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-customer
+spec:
+  selector:
+    matchLabels:
+      app: postgres-customer
+  replicas: 1
+  template: # template for the pods
+    metadata:
+      labels:
+        app: postgres-customer
+        version: v1
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:latest
+        imagePullPolicy: Always
+        env: 
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: configmaps-postgres-customer-config
+              key: postgres_db
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-customer-postgres
+              key: postgres_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-customer-postgres
+              key: postgres_password
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-customer-postgres
+              key: postgres_password
+        - name: POSTGRES_COMMAND
+          valueFrom:
+            configMapKeyRef:
+              name: postgrescustomer-init-config
+              key: init-sql
+        lifecycle:
+          postStart:
+             exec:
+                command: ["/bin/sh", "-c", "/opt/poststart.sh" ]
+        ports:
+        - containerPort: 5432
+          name: postgredb
+        volumeMounts:
+          - name: postgres-persistent-storage
+            mountPath: /var/lib/postgresql/data
+        volumeMounts:
+          - mountPath: /opt/poststart.sh
+            subPath: poststart.sh
+            name: hookvolume       
+      volumes:
+         - name: postgres-persistent-storage
+           persistentVolumeClaim:
+             claimName: postgres-customer-pvc
+      volumes:
+        - name: hookvolume
+          configMap:
+            name: poststarthook-customers
+            defaultMode: 0777 #please remember to add proper (executable) permissions
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: joeburger-postgres-customer
+spec:
+  # This defines which pods are going to represented by thie Service
+  # This service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+     app: postgres-customer
+  ports:
+    - name : postgredb
+      port: 5432    
+  type: ClusterIP

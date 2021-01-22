@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: customer-basicauth
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: basic-auth
+    kubernetes.io/ingress.class: kong
+spec:
+  rules:
+     - host: kong.joeburger.com.au
+     - http:
+         paths:
+         - path: /foo
+           backend:
+             serviceName: httpbin
+             servicePort: 80         
+          

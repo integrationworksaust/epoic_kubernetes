@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmaps-postgres-customer-config
+  labels:
+    app: postgres-customer
+data:
+  postgres_hostname: joeburger-postgres-customer
+  postgres_schema: public
+  postgres_db: postgresdb-customer
+  postgres_port: "5432"

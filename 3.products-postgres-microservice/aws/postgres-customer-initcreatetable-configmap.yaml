@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresmp-init-config
+data:
+  #init-sql: "CREATE TABLE public.motivationalprofiling(userid text NOT NULL,homeui text,homeuisetdate text NOT NULL,motivationalprofilingjson json,CONSTRAINT motivationalprofiling_pkey PRIMARY KEY (userid))"
+  inti-sql: "CREATE TABLE public.customers (customerId INTEGER GENERATED ALWAYS AS IDENTITY,first_Name VARCHAR(100),last_name VARCHAR(100),phone VARCHAR(50),email VARCHAR(50),PRIMARY KEY(customerId));"

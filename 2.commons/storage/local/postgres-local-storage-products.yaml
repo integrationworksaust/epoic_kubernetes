@@ -1,0 +1,28 @@
+# What do we want / asking for it
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-products-pvc
+spec:
+  storageClassName: postgresstorageproducts
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+#How to we want it implemeneted, what pyschical storage 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-local-storage-products
+spec:
+  storageClassName: postgresstorageproducts
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce 
+  hostPath:
+    path: /mnt/postgres/products
+    type: DirectoryOrCreate
+

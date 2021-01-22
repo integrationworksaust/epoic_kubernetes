@@ -1,0 +1,9 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: poststarthook-orders
+data:
+  poststart.sh: |
+     #!/bin/bash
+     sleep 30
+     psql $POSTGRES_DB -U $POSTGRES_USER -c "$POSTGRES_COMMAND"

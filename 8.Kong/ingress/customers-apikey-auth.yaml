@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: customer-api
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: httpbin-auth
+    kubernetes.io/ingress.class: kong
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /customers
+        backend:
+          serviceName: joeburger-customers
+          servicePort: 8081

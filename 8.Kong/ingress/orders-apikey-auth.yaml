@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: orders-api
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: httpbin-auth
+    kubernetes.io/ingress.class: kong
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /orders
+        backend:
+          serviceName: joeburger-orders
+          servicePort: 8081

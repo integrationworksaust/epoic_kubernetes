@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoices
+spec:
+  selector:
+    matchLabels:
+      app: invoices
+  replicas: 1
+  template: # template for the pods
+    metadata:
+      labels:
+        app: invoices
+        version: v1
+    spec:
+      containers:
+      - name: invoices
+        image: dzdunca/invoices:v1.0.0
+        env: 
+        - name: POSTGRES_SERVER_HOSTNAME
+          valueFrom:
+            configMapKeyRef:
+              name: configmaps-postgres-invoices-config
+              key: postgres_hostname
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: configmaps-postgres-invoices-config
+              key: postgres_db
+        - name: POSTGRES_SCHEMA
+          valueFrom:
+            configMapKeyRef:
+              name: configmaps-postgres-invoices-config
+              key: postgres_schema
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-invoices-postgres
+              key: postgres_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-invoices-postgres
+              key: postgres_password
+        ports:
+        - containerPort: 8081
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: joeburger-invoices
+spec:
+  # This defines which pods are going to represented by thie Service
+  # This service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+     app: invoices
+  ports:
+    - name: app
+      port: 8081
+      targetPort: 8081   
+  type: ClusterIP
