@@ -554,18 +554,18 @@ else
 fi
 
 environment=""
-installCustomers="Yes"
-installInvoices="Yes"
-installProducts="Yes"
-installOrders="Yes"
+installCustomers="yes"
+installInvoices="yes"
+installProducts="yes"
+installOrders="yes"
 
 if [ "$noprompt" == "no" ]; then
 	echo ""
 	echo "1. Do you wish to install Customers ?"
 	select yn in "Yes" "No"; do
 	    case $yn in
-	        Yes ) installCustomers="Yes"; break;;
-	        No ) installCustomers="No";break;;
+	        Yes ) installCustomers="yes"; break;;
+	        No ) installCustomers="no";break;;
 	    esac
 	done
 fi
@@ -575,8 +575,8 @@ if [ "$noprompt" == "no" ]; then
 	echo "1. Do you wish to install Products ?"
 	select yn in "Yes" "No"; do
 	    case $yn in
-	        Yes ) installProducts="Yes"; break;;
-	        No ) installProducts="No";break;;
+	        Yes ) installProducts="yes"; break;;
+	        No ) installProducts="no";break;;
 	    esac
 	done
 fi
@@ -586,8 +586,8 @@ if [ "$noprompt" == "no" ]; then
 	echo "1. Do you wish to install Orders ?"
 	select yn in "Yes" "No"; do
 	    case $yn in
-	        Yes ) installOrders="Yes"; break;;
-	        No ) installOrders="No";break;;
+	        Yes ) installOrders="yes"; break;;
+	        No ) installOrders="no";break;;
 	    esac
 	done
 fi
@@ -597,8 +597,8 @@ if [ "$noprompt" == "no" ]; then
 	echo "1. Do you wish to install Invoices ?"
 	select yn in "Yes" "No"; do
 	    case $yn in
-	        Yes ) installInvoices="Yes"; break;;
-	        No ) installInvoices="No";break;;
+	        Yes ) installInvoices="yes"; break;;
+	        No ) installInvoices="no";break;;
 	    esac
 	done
 fi
