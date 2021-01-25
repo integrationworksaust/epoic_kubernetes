@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-echo "Starting Joe Burger Install"
+echo "Starting EPOIC Install"
 echo "---------------------------"
 echo ""
 
@@ -22,6 +22,8 @@ EFKSleepInterval=60
 
 kibanaBaseURL=kibana.joeburger.com.au
 fluentdIndex=logstash
+
+export PATH=$PATH:/usr/local/bin
 
 ###########################################################
 #
