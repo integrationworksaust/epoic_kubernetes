@@ -346,7 +346,7 @@ installApplications(){
 		
 		kubectl apply -f 2.commons/configmap/customer-configmap.yaml
 		kubectl apply -f 4.customer-microservice/$environment/customer.yaml
-	}	
+	fi
 	
 	
 	if [ "$installProducts" == "yes" ]; then
@@ -357,7 +357,7 @@ installApplications(){
 		
 		kubectl apply -f 2.commons/configmap/products-configmap.yaml
 		kubectl apply -f 4.products-microservice/$environment/products.yaml
-	}
+	fi
 	
 		
 	if [ "$installOrders" == "yes" ]; then
@@ -368,7 +368,7 @@ installApplications(){
 		
 		kubectl apply -f 2.commons/configmap/orders-configmap.yaml
 		kubectl apply -f 4.orders-microservice/$environment/orders.yaml
-	}	
+	fi
 	
 	
 	if [ "$installInvoices" == "yes" ]; then
@@ -379,7 +379,7 @@ installApplications(){
 		
 		kubectl apply -f 2.commons/configmap/invoices-configmap.yaml
 		kubectl apply -f 4.invoices-microservice/$environment/invoices.yaml
-	}	
+	fi
 
 }
 
