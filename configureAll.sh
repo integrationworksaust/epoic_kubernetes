@@ -228,6 +228,7 @@ installDatabases(){
 	
 	if [ "$installCustomers" == "yes" ]; then
 	    if [ "$environment" == "aws" ]; then
+	       echo "kubectl apply -f 2.commons/storage/$environment/storage-class.yaml"
 	       kubectl apply -f 2.commons/storage/$environment/storage-class.yaml
 	    fi
 		kubectl apply -f 2.commons/storage/$environment/postgres-$environment-storage-customers.yaml
@@ -490,7 +491,7 @@ createKong(){
    kubectl apply -f 8.Kong/ingress/customers-apikey-auth.yaml
    kubectl apply -f 8.Kong/ingress/invoices-apikey-auth.yaml
    kubectl apply -f 8.Kong/ingress/orders-apikey-auth.yaml
-   kubectl apply -f 8.Kong/ingress/products-apikey-auth2.yaml
+   kubectl apply -f 8.Kong/ingress/products-apikey-auth.yaml
    
    echo ""
    echo "Creating the Consumers .............."

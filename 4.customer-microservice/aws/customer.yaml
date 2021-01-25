@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: customer
-        image: dzdunca/customer:v1.0.0
+        image: dzdunca/customers:v1.0.0
         env: 
         - name: POSTGRES_SERVER_HOSTNAME
           valueFrom:
