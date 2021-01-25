@@ -1,0 +1,14 @@
+# What do we want / asking for it
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-customers-pvc
+spec:
+  storageClassName: cloud-ssd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+

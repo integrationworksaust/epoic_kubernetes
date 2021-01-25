@@ -16,6 +16,7 @@ spec:
       containers:
       - name: postgres
         image: postgres:latest
+        imagePullPolicy: Always
         env: 
         - name: POSTGRES_DB
           valueFrom:
@@ -63,7 +64,7 @@ spec:
       volumes:
         - name: hookvolume
           configMap:
-            name: poststarthook-mp
+            name: poststarthook-customers
             defaultMode: 0777 #please remember to add proper (executable) permissions
 ---
 apiVersion: v1

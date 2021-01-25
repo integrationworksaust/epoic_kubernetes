@@ -6,4 +6,6 @@ metadata:
     app: postgres-customer
 data:
   postgres_hostname: joeburger-postgres-customer
-  postgres_db: postgresdb
+  postgres_schema: public
+  postgres_db: postgresdb-customer
+  postgres_port: "5432"

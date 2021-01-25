@@ -1,46 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-customer
+  name: postgres-products
 spec:
   selector:
     matchLabels:
-      app: postgres-customer
+      app: postgres-products
   replicas: 1
   template: # template for the pods
     metadata:
       labels:
-        app: postgres-customer
+        app: postgres-products
         version: v1
     spec:
       containers:
       - name: postgres
         image: postgres:latest
+        imagePullPolicy: Never
         env: 
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
-              name: configmaps-postgres-customer-config
+              name: configmaps-postgres-products-config
               key: postgres_db
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: secret-customer-postgres
+              name: secret-products-postgres
               key: postgres_user
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: secret-customer-postgres
+              name: secret-products-postgres
               key: postgres_password
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: secret-customer-postgres
+              name: secret-products-postgres
               key: postgres_password
         - name: POSTGRES_COMMAND
           valueFrom:
             configMapKeyRef:
-              name: postgrescustomer-init-config
+              name: postgresproducts-init-config
               key: init-sql
         lifecycle:
           postStart:
@@ -59,23 +60,23 @@ spec:
       volumes:
          - name: postgres-persistent-storage
            persistentVolumeClaim:
-             claimName: postgres-customer-pvc
+             claimName: postgres-products-pvc
       volumes:
         - name: hookvolume
           configMap:
-            name: poststarthook-mp
+            name: poststarthook-products
             defaultMode: 0777 #please remember to add proper (executable) permissions
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: joeburger-postgres-customer
+  name: joeburger-postgres-products
 spec:
   # This defines which pods are going to represented by thie Service
   # This service becomes a network endpoint for either other services
   # or maybe external users to connect to (eg browser)
   selector:
-     app: postgres-customer
+     app: postgres-products
   ports:
     - name : postgredb
       port: 5432    

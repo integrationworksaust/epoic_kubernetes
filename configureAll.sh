@@ -62,9 +62,18 @@ awsInstall(){
 	
 	echo "Installing Kubectl"
 	
-	curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
-	chmod +x ./kops
-	sudo mv ./kops /usr/local/bin/
+	curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+	chmod +x ./kubectl
+	sudo mv ./kubectl /usr/local/bin/kubectl
+	
+	echo "Installing Git"
+	sudo yum install git -y
+	sudo mkdir /u01
+	sudo mkdir /u01/epoic
+	sudo cd /u01/epoic
+	sudo git clone https://github.com/integrationworksaust/epoic_kubernetes.git
+	sudo cd /u01/epoic/epoic_kubernetes/
+	sudo chmod u+x configureAll.sh
 	
 	echo "Creating kops user and groups"
 	
@@ -89,10 +98,10 @@ awsInstall(){
 	export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
 	
 	echo "Creating the KOPS S3 Bucket"
-	aws s3api create-bucket --bucket joeburger-kops-state-storage --region ap-southeast-2 --create-bucket-configuration LocationConstraint=ap-southeast-2
+	aws s3api create-bucket --bucket epoic-kops-state-storage --region ap-southeast-2 --create-bucket-configuration LocationConstraint=ap-southeast-2
 	
-	export NAME=joeburger.k8s.local
-	export KOPS_STATE_STORE=s3://joeburger-kops-state-storage
+	export NAME=epoic.k8s.local
+	export KOPS_STATE_STORE=s3://epoic-kops-state-storage
 	
 	echo "Creating KOPS configuration file for cluster"
 	kops create cluster --zones ap-southeast-2a,ap-southeast-2b,ap-southeast-2c ${NAME}
@@ -103,13 +112,15 @@ awsInstall(){
 	echo "Installing public key in KOPS Cluster"
 	kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/id_rsa.pub
 	
-	#kops edit cluster {NAME} - Manual step at the moment
+	#kops edit cluster ${NAME} - Manual step at the moment
 	
 	echo "Verify changes of KOPS"
 	kops get ig --name ${NAME}
 	
 	echo "Update changes of KOPS .. This will take a few minutes"
 	kops update cluster ${NAME} --yes
+	
+	kops validate cluster
 	
 }
 
@@ -208,89 +219,114 @@ installIngress(){
 ###########################################################
 
 installDatabases(){
+
 	echo "Executing the Persistent Volumes Install"
 	echo "----------------------------------------"
 	
 	
-	kubectl apply -f 2.commons/storage/local/postgres-local-storage-customer.yaml
-	kubectl apply -f 2.commons/storage/local/postgres-local-storage-products.yaml
-	kubectl apply -f 2.commons/storage/local/postgres-local-storage-orders.yaml
-	kubectl apply -f 2.commons/storage/local/postgres-local-storage-invoices.yaml
+	if [ "$installCustomers" == "yes" ]; then
+	    if [ "$environment" == "aws" ]; then
+	       kubectl apply -f 2.commons/storage/$environment/storage-class.yaml
+	    fi
+		kubectl apply -f 2.commons/storage/$environment/postgres-$environment-storage-customers.yaml
+    fi
+	
+	if [ "$installProducts" == "yes" ]; then
+		kubectl apply -f 2.commons/storage/$environment/postgres-$environment-storage-products.yaml
+	fi
+		
+    if [ "$installOrders" == "yes" ]; then
+		kubectl apply -f 2.commons/storage/$environment/postgres-$environment-storage-orders.yaml
+	fi
+		
+	if [ "$installInvoices" == "yes" ]; then
+		kubectl apply -f 2.commons/storage/$environment/postgres-$environment-storage-invoices.yaml
+	fi
 	
 	echo "Executing Joe Burger Databases Install"
 	echo "---------------------------"
 	
 	echo "Wait for Database : " $databasewait
 	
-	echo ""
-	echo "Creating Database Customer"
-	echo "=========================="
-	echo ""
+	if [ "$installCustomers" == "yes" ]; then
+		echo ""
+		echo "Creating Database Customer"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/secrets/postgres-secret-customer.yaml
+		kubectl apply -f 3.customer-postgres-microservice/$environment/postgres-customer-configmap.yaml
+		kubectl apply -f 3.customer-postgres-microservice/$environment/postgres-customer-initcreatetable-configmap.yaml
+		kubectl apply -f 3.customer-postgres-microservice/$environment/postgres-customer-runpostscript-configmap.yaml
+		kubectl apply -f 3.customer-postgres-microservice/$environment/postgres-customer-deployment.yaml
+		
+		if [ $databasewait -eq 1 ] 
+		then
+		  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
+		  sleep $databaseSleepInterval
+		fi
+	fi	
 	
-	kubectl apply -f 2.commons/secrets/postgres-secret-customer.yaml
-	kubectl apply -f 3.customer-postgres-microservice/local/postgres-customer-configmap.yaml
-	kubectl apply -f 3.customer-postgres-microservice/local/postgres-customer-initcreatetable-configmap.yaml
-	kubectl apply -f 3.customer-postgres-microservice/local/postgres-customer-runpostscript-configmap.yaml
-	kubectl apply -f 3.customer-postgres-microservice/local/postgres-customer-deployment.yaml
-	
-	if [ $databasewait -eq 1 ] 
-	then
-	  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
-	  sleep $databaseSleepInterval
+	if [ "$installProducts" == "yes" ]; then
+		echo ""
+		echo "Creating Database Products"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/secrets/postgres-secret-products.yaml
+		kubectl apply -f 3.products-postgres-microservice/$environment/postgres-products-configmap.yaml
+		kubectl apply -f 3.products-postgres-microservice/$environment/postgres-products-initcreatetable-configmap.yaml
+		kubectl apply -f 3.products-postgres-microservice/$environment/postgres-products-runpostscript-configmap.yaml
+		kubectl apply -f 3.products-postgres-microservice/$environment/postgres-products-deployment.yaml
+		
+		if [ $databasewait -eq 1 ] 
+		then
+		  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
+		  sleep $databaseSleepInterval
+		fi
 	fi
 	
 	
-	echo ""
-	echo "Creating Database Products"
-	echo "=========================="
-	echo ""
-	
-	kubectl apply -f 2.commons/secrets/postgres-secret-products.yaml
-	kubectl apply -f 3.products-postgres-microservice/local/postgres-products-configmap.yaml
-	kubectl apply -f 3.products-postgres-microservice/local/postgres-products-initcreatetable-configmap.yaml
-	kubectl apply -f 3.products-postgres-microservice/local/postgres-products-runpostscript-configmap.yaml
-	kubectl apply -f 3.products-postgres-microservice/local/postgres-products-deployment.yaml
-	
-	if [ $databasewait -eq 1 ] 
-	then
-	  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
-	  sleep $databaseSleepInterval
+	 if [ "$installOrders" == "yes" ]; then
+		echo ""
+		echo "Creating Database Orders"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/secrets/postgres-secret-orders.yaml
+		kubectl apply -f 3.orders-postgres-microservice/$environment/postgres-orders-configmap.yaml
+		kubectl apply -f 3.orders-postgres-microservice/$environment/postgres-orders-initcreatetable-configmap.yaml
+		kubectl apply -f 3.orders-postgres-microservice/$environment/postgres-orders-runpostscript-configmap.yaml
+		kubectl apply -f 3.orders-postgres-microservice/$environment/postgres-orders-deployment.yaml
+		
+		if [ $databasewait -eq 1 ] 
+		then
+		  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
+		  sleep $databaseSleepInterval
+		fi
 	fi
 	
-	echo ""
-	echo "Creating Database Orders"
-	echo "=========================="
-	echo ""
 	
-	kubectl apply -f 2.commons/secrets/postgres-secret-orders.yaml
-	kubectl apply -f 3.orders-postgres-microservice/local/postgres-orders-configmap.yaml
-	kubectl apply -f 3.orders-postgres-microservice/local/postgres-orders-initcreatetable-configmap.yaml
-	kubectl apply -f 3.orders-postgres-microservice/local/postgres-orders-runpostscript-configmap.yaml
-	kubectl apply -f 3.orders-postgres-microservice/local/postgres-orders-deployment.yaml
-	
-	if [ $databasewait -eq 1 ] 
-	then
-	  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
-	  sleep $databaseSleepInterval
+	if [ "$installInvoices" == "yes" ]; then	
+		echo ""
+		echo "Creating Database Invoices"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/secrets/postgres-secret-invoices.yaml
+		kubectl apply -f 3.invoices-postgres-microservice/$environment/postgres-invoices-configmap.yaml
+		kubectl apply -f 3.invoices-postgres-microservice/$environment/postgres-invoices-initcreatetable-configmap.yaml
+		kubectl apply -f 3.invoices-postgres-microservice/$environment/postgres-invoices-runpostscript-configmap.yaml
+		kubectl apply -f 3.invoices-postgres-microservice/$environment/postgres-invoices-deployment.yaml
+		
+		
+		if [ $databasewait -eq 1 ] 
+		then
+		  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
+		  sleep $databaseSleepInterval
+		fi
 	fi
-	
-	echo ""
-	echo "Creating Database Invoices"
-	echo "=========================="
-	echo ""
-	
-	kubectl apply -f 2.commons/secrets/postgres-secret-invoices.yaml
-	kubectl apply -f 3.invoices-postgres-microservice/local/postgres-invoices-configmap.yaml
-	kubectl apply -f 3.invoices-postgres-microservice/local/postgres-invoices-initcreatetable-configmap.yaml
-	kubectl apply -f 3.invoices-postgres-microservice/local/postgres-invoices-runpostscript-configmap.yaml
-	kubectl apply -f 3.invoices-postgres-microservice/local/postgres-invoices-deployment.yaml
-	
-	
-	if [ $databasewait -eq 1 ] 
-	then
-	  echo "Sleep for " $databaseSleepInterval " secs for database to come up, dependency the services"
-	  sleep $databaseSleepInterval
-	fi
+		
 }
 
 ###########################################################
@@ -302,39 +338,48 @@ installDatabases(){
 
 installApplications(){
 
-	echo ""
-	echo "Creating Customer Deployment"
-	echo "=========================="
-	echo ""
-	
-	kubectl apply -f 2.commons/configmap/customer-configmap.yaml
-	kubectl apply -f 4.customer-microservice/local/customer-developer.yaml
-	
-	
-	echo ""
-	echo "Creating Products Deployment"
-	echo "=========================="
-	echo ""
-	
-	kubectl apply -f 2.commons/configmap/products-configmap.yaml
-	kubectl apply -f 4.products-microservice/local/products-developer.yaml
-	
-	echo ""
-	echo "Creating Orders Deployment"
-	echo "=========================="
-	echo ""
-	
-	kubectl apply -f 2.commons/configmap/orders-configmap.yaml
-	kubectl apply -f 4.orders-microservice/local/orders-developer.yaml
+    if [ "$installCustomers" == "yes" ]; then
+		echo ""
+		echo "Creating Customer Deployment"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/configmap/customer-configmap.yaml
+		kubectl apply -f 4.customer-microservice/$environment/customer.yaml
+	}	
 	
 	
-	echo ""
-	echo "Creating Invoices Deployment"
-	echo "=========================="
-	echo ""
+	if [ "$installProducts" == "yes" ]; then
+		echo ""
+		echo "Creating Products Deployment"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/configmap/products-configmap.yaml
+		kubectl apply -f 4.products-microservice/$environment/products.yaml
+	}
 	
-	kubectl apply -f 2.commons/configmap/invoices-configmap.yaml
-	kubectl apply -f 4.invoices-microservice/local/invoices-developer.yaml
+		
+	if [ "$installOrders" == "yes" ]; then
+		echo ""
+		echo "Creating Orders Deployment"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/configmap/orders-configmap.yaml
+		kubectl apply -f 4.orders-microservice/$environment/orders.yaml
+	}	
+	
+	
+	if [ "$installInvoices" == "yes" ]; then
+		echo ""
+		echo "Creating Invoices Deployment"
+		echo "=========================="
+		echo ""
+		
+		kubectl apply -f 2.commons/configmap/invoices-configmap.yaml
+		kubectl apply -f 4.invoices-microservice/$environment/invoices.yaml
+	}	
 
 }
 
@@ -509,6 +554,54 @@ else
 fi
 
 environment=""
+installCustomers="Yes"
+installInvoices="Yes"
+installProducts="Yes"
+installOrders="Yes"
+
+if [ "$noprompt" == "no" ]; then
+	echo ""
+	echo "1. Do you wish to install Customers ?"
+	select yn in "Yes" "No"; do
+	    case $yn in
+	        Yes ) installCustomers="Yes"; break;;
+	        No ) installCustomers="No";break;;
+	    esac
+	done
+fi
+
+if [ "$noprompt" == "no" ]; then
+	echo ""
+	echo "1. Do you wish to install Products ?"
+	select yn in "Yes" "No"; do
+	    case $yn in
+	        Yes ) installProducts="Yes"; break;;
+	        No ) installProducts="No";break;;
+	    esac
+	done
+fi
+
+if [ "$noprompt" == "no" ]; then
+	echo ""
+	echo "1. Do you wish to install Orders ?"
+	select yn in "Yes" "No"; do
+	    case $yn in
+	        Yes ) installOrders="Yes"; break;;
+	        No ) installOrders="No";break;;
+	    esac
+	done
+fi
+
+if [ "$noprompt" == "no" ]; then
+	echo ""
+	echo "1. Do you wish to install Invoices ?"
+	select yn in "Yes" "No"; do
+	    case $yn in
+	        Yes ) installInvoices="Yes"; break;;
+	        No ) installInvoices="No";break;;
+	    esac
+	done
+fi
 
 # Check to see if you need to install the ingress component
 

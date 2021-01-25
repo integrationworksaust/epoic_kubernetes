@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmaps-postgres-invoices-config
+  labels:
+    app: postgres-invoices
+data:
+  postgres_hostname: joeburger-postgres-invoices
+  postgres_schema: public
+  postgres_db: postgresdb-invoices

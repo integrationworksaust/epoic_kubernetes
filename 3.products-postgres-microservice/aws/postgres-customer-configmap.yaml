@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: configmaps-postgres-customer-config
-  labels:
-    app: postgres-customer
-data:
-  postgres_hostname: joeburger-postgres-customer
-  postgres_db: postgresdb

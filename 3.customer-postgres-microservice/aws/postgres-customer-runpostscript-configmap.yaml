@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: poststarthook-mp
+  name: poststarthook-customers
 data:
   poststart.sh: |
      #!/bin/bash
