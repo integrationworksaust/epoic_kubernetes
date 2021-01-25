@@ -12,5 +12,5 @@ spec:
       paths:
       - path: /customers
         backend:
-          serviceName: joeburger-customers
+          serviceName: epoic-customers
           servicePort: 8081

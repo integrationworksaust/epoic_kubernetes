@@ -12,5 +12,5 @@ spec:
       paths:
       - path: /orders
         backend:
-          serviceName: joeburger-orders
+          serviceName: epoic-orders
           servicePort: 8081

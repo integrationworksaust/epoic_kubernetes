@@ -12,5 +12,5 @@ spec:
       paths:
       - path: /products
         backend:
-          serviceName: joeburger-products
+          serviceName: epoic-products
           servicePort: 8081

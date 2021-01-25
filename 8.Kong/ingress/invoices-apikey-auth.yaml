@@ -12,5 +12,5 @@ spec:
       paths:
       - path: /invoices
         backend:
-          serviceName: joeburger-invoices
+          serviceName: epoic-invoices
           servicePort: 8081
