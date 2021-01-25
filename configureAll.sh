@@ -225,6 +225,7 @@ installDatabases(){
 	echo "Executing the Persistent Volumes Install"
 	echo "----------------------------------------"
 	
+	echo $environment
 	
 	if [ "$installCustomers" == "yes" ]; then
 	    if [ "$environment" == "aws" ]; then

@@ -8,7 +8,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /foo
+      - path: /foo2
         backend:
           serviceName: echo
           servicePort: 80
