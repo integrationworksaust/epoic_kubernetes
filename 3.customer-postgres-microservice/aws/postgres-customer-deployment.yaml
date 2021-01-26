@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: postgres-customer
-  replicas: 2
+  replicas: 1
   template: # template for the pods
     metadata:
       labels:
