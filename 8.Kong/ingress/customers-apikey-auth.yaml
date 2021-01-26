@@ -4,12 +4,13 @@ metadata:
   name: customer-api
   annotations:
     konghq.com/strip-path: "true"
+    konghq.com/plugins: httpbin-auth
     kubernetes.io/ingress.class: kong
 spec:
   rules:
   - http:
       paths:
-      - path: /cs
+      - path: /customers
         backend:
           serviceName: epoic-customers
           servicePort: 8081
